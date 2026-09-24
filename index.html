@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioGraph Zoo - Smart Eco-Zoo Web Application</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        sage: {
+                            50: '#F4F7F4',
+                            100: '#E3EBE3',
+                            200: '#C7D7C7',
+                            500: '#52796F',
+                            600: '#354F52',
+                            700: '#2E7D32',
+                            800: '#1B4D3E',
+                            900: '#0F3026',
+                        },
+                        amberGold: '#D4A373',
+                    },
+                    fontFamily: {
+                        sans: ['Kanit', 'Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- QRCode JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Kanit', 'Inter', sans-serif;
+            background-color: #F8F9FA;
+            color: #2D3748;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.90);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .node-pulse {
+            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.15); opacity: 0.4; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F1F5F9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94A3B8;
+        }
+
+        .active-nav-item {
+            color: #2E7D32 !important;
+            font-weight: 600 !important;
+            border-bottom: 2px solid #2E7D32;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .printable-ticket, .printable-ticket * {
+                visibility: visible;
+            }
+            .printable-ticket {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-sage-700 selection:text-white">
+
+    <!-- Navigation Header -->
+    <header class="sticky top-0 z-50 glass-card border-b border-gray-200/80 shadow-sm transition-all duration-300 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo & Brand Name -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="navigateTo('page-home')">
+                    <div class="w-12 h-12 bg-sage-800 rounded-2xl flex items-center justify-center shadow-md shadow-sage-800/20 text-white">
+                        <!-- Custom SVG Leaf-Graph Logo -->
+                        <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="6" cy="6" r="2.5" fill="#E3EBE3"/>
+                            <circle cx="18" cy="6" r="2.5" fill="#E3EBE3"/>
+                            <circle cx="12" cy="18" r="2.5" fill="#E3EBE3"/>
+                            <path d="M6 8.5L12 15.5L18 8.5" />
+                            <path d="M6 6H18" />
+                            <path d="M12 18V12" stroke-dasharray="2 2" />
+                            <path d="M12 2C7 2 3 6 3 11c0 5.25 7 11 9 11 2 0 9-5.75 9-11 0-5-4-9-9-9z" opacity="0.2" fill="#2E7D32"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="text-2xl font-bold tracking-tight text-sage-900">BioGraph <span class="text-sage-700">Zoo</span></span>
+                        <p class="text-xs text-gray-500 font-normal">Discrete Math Eco-Smart Zoo</p>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation Menu -->
+                <nav class="hidden md:flex space-x-8">
+                    <button onclick="navigateTo('page-home')" id="nav-page-home" class="nav-btn py-2 text-sm font-medium text-gray-600 hover:text-sage-700 transition">
+                        <i data-lucide="home" class="w-4 h-4 inline mr-1.5 mb-0.5"></i>หน้าแรก & สัตว์
+                    </button>
+                    <button onclick="navigateTo('page-tickets')" id="nav-page-tickets" class="nav-btn py-2 text-sm font-medium text-gray-600 hover:text-sage-700 transition">
+                        <i data-lucide="ticket" class="w-4 h-4 inline mr-1.5 mb-0.5"></i>จองบัตรเข้าชม
+                    </button>
+                    <button onclick="navigateTo('page-map')" id="nav-page-map" class="nav-btn py-2 text-sm font-medium text-gray-600 hover:text-sage-700 transition">
+                        <i data-lucide="network" class="w-4 h-4 inline mr-1.5 mb-0.5"></i>แผนผัง Graph & Tree
+                    </button>
+                    <button onclick="navigateTo('page-orders')" id="nav-page-orders" class="nav-btn py-2 text-sm font-medium text-gray-600 hover:text-sage-700 transition relative">
+                        <i data-lucide="receipt" class="w-4 h-4 inline mr-1.5 mb-0.5"></i>รายการที่ชำระแล้ว
+                        <span id="order-badge" class="hidden absolute -top-1 -right-2 bg-amberGold text-white text-[10px] font-bold w-5 h-5 rounded-full items-center justify-center">0</span>
+                    </button>
+                </nav>
+
+                <!-- Quick Action Button -->
+                <div class="hidden sm:flex items-center space-x-3">
+                    <button onclick="navigateTo('page-tickets')" class="bg-sage-800 hover:bg-sage-900 text-white px-4 py-2.5 rounded-xl text-sm font-medium shadow-sm transition flex items-center">
+                        <i data-lucide="plus-circle" class="w-4 h-4 mr-2"></i>จองตั๋วทันที
+                    </button>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-lg text-gray-600 hover:text-sage-800 focus:outline-none">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-b border-gray-200 px-4 pt-2 pb-4 space-y-2">
+            <button onclick="navigateTo('page-home'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-sage-50 rounded-lg">หน้าแรก & สัตว์</button>
+            <button onclick="navigateTo('page-tickets'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-sage-50 rounded-lg">จองบัตรเข้าชม</button>
+            <button onclick="navigateTo('page-map'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-sage-50 rounded-lg">แผนผัง Graph & Tree</button>
+            <button onclick="navigateTo('page-orders'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-sage-50 rounded-lg">รายการที่ชำระแล้ว</button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- ================= PAGE 1: HOME & ANIMALS ================= -->
+        <section id="page-home" class="space-y-12">
+            <!-- Hero Banner -->
+            <div class="relative rounded-3xl overflow-hidden bg-gradient-to-r from-sage-900 via-sage-800 to-sage-700 text-white p-8 sm:p-12 shadow-xl">
+                <div class="absolute -right-10 -bottom-10 opacity-10 pointer-events-none">
+                    <svg class="w-96 h-96" viewBox="0 0 200 200">
+                        <path fill="#FFFFFF" d="M44.7,-76.4C58.8,-69.2,71.8,-59.1,79.6,-45.8C87.4,-32.6,90,-16.3,88.5,-0.9C87,14.6,81.4,29.2,73.1,42.2C64.8,55.2,53.8,66.6,40.4,73.8C27,81,13.5,84,-0.8,85.4C-15.1,86.8,-30.2,86.6,-43.8,80.1C-57.4,73.6,-69.5,60.8,-77.3,46.1C-85.1,31.4,-88.6,15.7,-87.3,0.8C-86,-14.2,-79.9,-28.4,-71.4,-41.2C-62.9,-54,-52,-65.4,-39,-73.2C-26,-81,-13,-85.2,0.9,-86.8C14.8,-88.4,29.6,-87.6,44.7,-76.4Z" transform="translate(100 100)" />
+                    </svg>
+                </div>
+                <div class="relative z-10 max-w-2xl space-y-4">
+                    <span class="px-3.5 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold tracking-wide uppercase text-sage-100">
+                        🌿 Smart Eco-Zoo Interactive Application
+                    </span>
+                    <h1 class="text-3xl sm:text-5xl font-extrabold leading-tight">
+                        เรียนรู้ธรรมชาติผ่าน <br><span class="text-amberGold">เครือข่ายนิเวศวิทยาอัจฉริยะ</span>
+                    </h1>
+                    <p class="text-sage-100 text-base sm:text-lg">
+                        ยินดีต้อนรับสู่ BioGraph Zoo สวนสัตว์ดิจิทัลที่เชื่อมโยงสัตว์ป่าและโซนเรียนรู้ด้วยทฤษฎีกราฟและโครงสร้างต้นไม้ พร้อมระบบวางแผนเส้นทางเดินชมอัตโนมัติ
+                    </p>
+                    <div class="pt-4 flex flex-wrap gap-4">
+                        <button onclick="navigateTo('page-tickets')" class="bg-amberGold hover:bg-amber-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg transition flex items-center">
+                            <i data-lucide="ticket" class="w-5 h-5 mr-2"></i>จองบัตรเข้าชม
+                        </button>
+                        <button onclick="navigateTo('page-map')" class="bg-white/10 hover:bg-white/20 text-white font-semibold px-6 py-3 rounded-xl backdrop-blur-md border border-white/20 transition flex items-center">
+                            <i data-lucide="map" class="w-5 h-5 mr-2"></i>สำรวจเส้นทางเดิน Zoo Graph
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats Bar -->
+                <div class="mt-10 pt-8 border-t border-white/20 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                    <div>
+                        <div class="text-2xl sm:text-3xl font-bold text-amberGold">8 โซนหลัก</div>
+                        <div class="text-xs text-sage-100">Graph Vertices</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl sm:text-3xl font-bold text-amberGold">10 เส้นทาง</div>
+                        <div class="text-xs text-sage-100">Weighted Edges</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl sm:text-3xl font-bold text-amberGold">30+ ชนิด</div>
+                        <div class="text-xs text-sage-100">สัตว์ป่าและพืชพันธุ์</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl sm:text-3xl font-bold text-amberGold">100% Eco</div>
+                        <div class="text-xs text-sage-100">พลังงานสะอาด</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Animal Gallery Header & Category Filters -->
+            <div>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-sage-900">หมวดหมู่สัตว์ป่าในสวนสัตว์ (Animal Showcase)</h2>
+                        <p class="text-sm text-gray-500">เลือกดูสัตว์ป่าตามหมวดหมู่นิเวศวิทยาที่จัดเก็บในโครงสร้างข้อมูล Tree</p>
+                    </div>
+
+                    <!-- Category Filter Buttons -->
+                    <div class="flex flex-wrap gap-2" id="animal-filter-container">
+                        <button onclick="filterAnimals('all')" class="filter-btn active-filter px-4 py-2 rounded-xl text-sm font-medium bg-sage-800 text-white transition shadow-sm">ทั้งหมด</button>
+                        <button onclick="filterAnimals('mammals')" class="filter-btn px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-600 hover:bg-sage-100 transition border border-gray-200">สัตว์เลี้ยงลูกด้วยนม</button>
+                        <button onclick="filterAnimals('birds')" class="filter-btn px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-600 hover:bg-sage-100 transition border border-gray-200">สัตว์ปีก</button>
+                        <button onclick="filterAnimals('reptiles')" class="filter-btn px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-600 hover:bg-sage-100 transition border border-gray-200">สัตว์เลื้อยคลาน</button>
+                        <button onclick="filterAnimals('aquatic')" class="filter-btn px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-600 hover:bg-sage-100 transition border border-gray-200">สัตว์น้ำ & ขั้วโลก</button>
+                    </div>
+                </div>
+
+                <!-- Animal Cards Grid -->
+                <div id="animal-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Dynamic rendering via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PAGE 2: TICKET BOOKING ================= -->
+        <section id="page-tickets" class="hidden space-y-8">
+            <div class="border-b border-gray-200 pb-4">
+                <h2 class="text-3xl font-bold text-sage-900">จองบัตรเข้าชม & วางแผนเส้นทาง</h2>
+                <p class="text-gray-600 text-sm mt-1">เลือกรอบวันที่ ประเภทตั๋ว และคำนวณเส้นทางเดินชมสัตว์ที่สั้นที่สุดด้วย Graph Shortest Path Algorithm</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Left Column: Booking Form -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Date Picker & Visitor Details -->
+                    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6">
+                        <h3 class="text-lg font-bold text-sage-800 flex items-center">
+                            <i data-lucide="calendar" class="w-5 h-5 mr-2 text-sage-700"></i>1. ระบุวันที่และข้อมูลผู้เข้าชม
+                        </h3>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 uppercase mb-2">เลือกวันที่เข้าชม</label>
+                                <input type="date" id="booking-date" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sage-700 focus:outline-none text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 uppercase mb-2">ชื่อผู้ติดต่อ / ตัวแทน</label>
+                                <input type="text" id="booking-name" placeholder="ชื่อ-นามสกุล" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sage-700 focus:outline-none text-sm" value="สมชาย ใจดี">
+                            </div>
+                        </div>
+
+                        <!-- Ticket Options Counter -->
+                        <div class="space-y-4 pt-4 border-t border-gray-100">
+                            <label class="block text-xs font-semibold text-gray-600 uppercase">2. เลือกประเภทบัตรเข้าชม</label>
+
+                            <!-- Ticket Adult -->
+                            <div class="flex items-center justify-between p-4 bg-sage-50/50 rounded-xl border border-sage-100">
+                                <div>
+                                    <div class="font-bold text-sage-900">บัตรผู้ใหญ่ (Adult Ticket)</div>
+                                    <div class="text-xs text-gray-500">สำหรับบุคคลทั่วไป อายุ 15-59 ปี</div>
+                                    <div class="text-sage-700 font-extrabold mt-1">฿250 / ท่าน</div>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <button onclick="updateTicketCount('adult', -1)" class="w-8 h-8 rounded-lg bg-white border border-gray-300 flex items-center justify-center text-gray-600 font-bold hover:bg-gray-100">-</button>
+                                    <span id="count-adult" class="w-6 text-center font-bold text-gray-800">1</span>
+                                    <button onclick="updateTicketCount('adult', 1)" class="w-8 h-8 rounded-lg bg-sage-800 text-white flex items-center justify-center font-bold hover:bg-sage-900">+</button>
+                                </div>
+                            </div>
+
+                            <!-- Ticket Child -->
+                            <div class="flex items-center justify-between p-4 bg-sage-50/50 rounded-xl border border-sage-100">
+                                <div>
+                                    <div class="font-bold text-sage-900">บัตรเด็ก / นักศึกษา (Child / Student)</div>
+                                    <div class="text-xs text-gray-500">ความสูงไม่เกิน 135 ซม. หรือบัตรนักศึกษา</div>
+                                    <div class="text-sage-700 font-extrabold mt-1">฿120 / ท่าน</div>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <button onclick="updateTicketCount('child', -1)" class="w-8 h-8 rounded-lg bg-white border border-gray-300 flex items-center justify-center text-gray-600 font-bold hover:bg-gray-100">-</button>
+                                    <span id="count-child" class="w-6 text-center font-bold text-gray-800">0</span>
+                                    <button onclick="updateTicketCount('child', 1)" class="w-8 h-8 rounded-lg bg-sage-800 text-white flex items-center justify-center font-bold hover:bg-sage-900">+</button>
+                                </div>
+                            </div>
+
+                            <!-- Ticket Senior -->
+                            <div class="flex items-center justify-between p-4 bg-sage-50/50 rounded-xl border border-sage-100">
+                                <div>
+                                    <div class="font-bold text-sage-900">ผู้สูงอายุ (Senior 60+)</div>
+                                    <div class="text-xs text-gray-500">อายุ 60 ปีขึ้นไป (โปรดแสดงบัตรประชาชน)</div>
+                                    <div class="text-sage-700 font-extrabold mt-1">฿150 / ท่าน</div>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <button onclick="updateTicketCount('senior', -1)" class="w-8 h-8 rounded-lg bg-white border border-gray-300 flex items-center justify-center text-gray-600 font-bold hover:bg-gray-100">-</button>
+                                    <span id="count-senior" class="w-6 text-center font-bold text-gray-800">0</span>
+                                    <button onclick="updateTicketCount('senior', 1)" class="w-8 h-8 rounded-lg bg-sage-800 text-white flex items-center justify-center font-bold hover:bg-sage-900">+</button>
+                                </div>
+                            </div>
+
+                            <!-- Ticket Foreigner -->
+                            <div class="flex items-center justify-between p-4 bg-sage-50/50 rounded-xl border border-sage-100">
+                                <div>
+                                    <div class="font-bold text-sage-900">ชาวต่างชาติ (Foreign Visitor)</div>
+                                    <div class="text-xs text-gray-500">รวมคู่มือภาษาอังกฤษ + Tram Unlimited Pass</div>
+                                    <div class="text-sage-700 font-extrabold mt-1">฿350 / ท่าน</div>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <button onclick="updateTicketCount('foreigner', -1)" class="w-8 h-8 rounded-lg bg-white border border-gray-300 flex items-center justify-center text-gray-600 font-bold hover:bg-gray-100">-</button>
+                                    <span id="count-foreigner" class="w-6 text-center font-bold text-gray-800">0</span>
+                                    <button onclick="updateTicketCount('foreigner', 1)" class="w-8 h-8 rounded-lg bg-sage-800 text-white flex items-center justify-center font-bold hover:bg-sage-900">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Graph Route Suggester Component -->
+                    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+                        <h3 class="text-lg font-bold text-sage-800 flex items-center">
+                            <i data-lucide="route" class="w-5 h-5 mr-2 text-sage-700"></i>3. ระบบคำนวณเส้นทางเดินสั้นที่สุด (Graph Shortest Path Suggester)
+                        </h3>
+                        <p class="text-xs text-gray-500">เลือกระหว่างจุดเริ่มต้นและโซนปลายทางที่ต้องการไปชม ระบบจะคำนวณระยะทางสั้นที่สุดบน Weighted Graph</p>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">จุดเริ่มต้น (Start Vertex):</label>
+                                <select id="path-start" class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm" onchange="calculateTourRoute()">
+                                    <!-- Dynamic options -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">โซนปลายทาง (Target Vertex):</label>
+                                <select id="path-end" class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm" onchange="calculateTourRoute()">
+                                    <!-- Dynamic options -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Real-time Path Calculated Result Box -->
+                        <div id="route-result-box" class="p-4 bg-sage-50 rounded-xl border border-sage-200 text-sm space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-sage-900">เส้นทางแนะนำ (Optimal Path):</span>
+                                <span id="route-distance" class="text-xs font-semibold bg-sage-200 text-sage-900 px-2.5 py-1 rounded-md">ระยะทาง: 0 ม.</span>
+                            </div>
+                            <div id="route-path-nodes" class="text-sage-800 font-semibold leading-relaxed">
+                                V0 Entrance ➔ V1 Savanna Zone
+                            </div>
+                            <div class="text-xs text-gray-500 italic">
+                                * ประมวลผลด้วย Dijkstra Shortest Path Algorithm บน Weighted Graph ของสวนสัตว์
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Booking Summary Card -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-lg sticky top-28 space-y-6">
+                        <h3 class="text-xl font-bold text-sage-900 border-b border-gray-100 pb-3">สรุปยอดการจอง</h3>
+
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between text-gray-600">
+                                <span>วันที่:</span>
+                                <span id="summary-date" class="font-semibold text-gray-800">วันนี้</span>
+                            </div>
+                            <div class="flex justify-between text-gray-600">
+                                <span>ผู้ติดต่อ:</span>
+                                <span id="summary-name" class="font-semibold text-gray-800">สมชาย ใจดี</span>
+                            </div>
+                            <div class="flex justify-between text-gray-600">
+                                <span>จำนวนบัตร:</span>
+                                <span id="summary-tickets-count" class="font-semibold text-gray-800">1 ใบ</span>
+                            </div>
+                            <div class="flex justify-between text-gray-600">
+                                <span>เส้นทางที่บันทึก:</span>
+                                <span id="summary-route" class="font-semibold text-sage-700 text-right max-w-[140px] truncate">V0 ➔ V1</span>
+                            </div>
+                            <div class="border-t border-gray-100 pt-3 flex justify-between items-center">
+                                <span class="font-bold text-gray-800 text-base">ยอดชำระสุทธิ:</span>
+                                <span id="summary-total-price" class="text-2xl font-extrabold text-sage-700">฿250</span>
+                            </div>
+                        </div>
+
+                        <button onclick="openPaymentModal()" class="w-full py-3.5 bg-sage-800 hover:bg-sage-900 text-white rounded-xl font-bold shadow-md shadow-sage-800/20 transition flex items-center justify-center">
+                            <i data-lucide="credit-card" class="w-5 h-5 mr-2"></i>ชำระเงินทันที (Pay Now)
+                        </button>
+
+                        <div class="text-xs text-center text-gray-400">
+                            🔒 ชำระเงินจำลองทันทีด้วย PromptPay / Credit Card
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PAGE 3: GRAPH & TREE MAP VISUALIZER ================= -->
+        <section id="page-map" class="hidden space-y-12">
+            <div class="border-b border-gray-200 pb-4">
+                <h2 class="text-3xl font-bold text-sage-900">แผนผังสถานที่ Graph & Tree Hierarchy</h2>
+                <p class="text-gray-600 text-sm mt-1">แสดงการแทนข้อมูลสถานที่ด้วย Graph Theory (Vertices, Edges, Adjacency List) และลำดับชั้นหมวดหมู่ด้วย Tree Traversal</p>
+            </div>
+
+            <!-- MODULE 1: GRAPH VISUALIZER -->
+            <div class="bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 pb-4">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-sage-700 bg-sage-100 px-2.5 py-1 rounded-full">Discrete Math Concept: Graph Theory</span>
+                        <h3 class="text-2xl font-bold text-sage-900 mt-2">1. แผนผังเครือข่ายสถานที่ (Weighted Graph Map)</h3>
+                        <p class="text-xs text-gray-500">8 Vertices (โซนสถานที่) & 10 Weighted Edges (ระยะทางระบุเป็นเมตร)</p>
+                    </div>
+
+                    <!-- Graph Actions -->
+                    <div class="flex items-center space-x-2">
+                        <button onclick="runGraphBFS()" class="bg-sage-100 hover:bg-sage-200 text-sage-900 text-xs px-3.5 py-2 rounded-xl font-semibold transition">
+                            ⚡ Run BFS Traversal
+                        </button>
+                        <button onclick="resetGraphHighlight()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs px-3.5 py-2 rounded-xl font-semibold transition">
+                            🔄 ล้างเส้นทาง
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Graph Canvas SVG Visualizer -->
+                    <div class="lg:col-span-2 bg-sage-50/50 rounded-2xl border border-sage-100 p-4 relative min-h-[420px] flex items-center justify-center overflow-hidden">
+                        <svg id="graph-svg" class="w-full h-[400px]" viewBox="0 0 800 450">
+                            <!-- SVG Content Generated via JS -->
+                        </svg>
+
+                        <!-- Legend Overlay -->
+                        <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md p-3 rounded-xl border border-gray-200 text-[11px] space-y-1 shadow-sm">
+                            <div class="flex items-center space-x-2">
+                                <span class="w-3.5 h-3.5 rounded-full bg-sage-800 inline-block"></span>
+                                <span class="text-gray-700 font-semibold">Vertex (โซนสถานที่)</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="w-6 h-1 bg-amberGold inline-block"></span>
+                                <span class="text-gray-700 font-semibold">Shortest Path Highlight</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- JavaScript Adjacency List Panel -->
+                    <div class="bg-slate-900 text-slate-100 p-5 rounded-2xl space-y-4 font-mono text-xs overflow-y-auto max-h-[440px] shadow-inner">
+                        <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                            <span class="text-amberGold font-bold text-sm">Adjacency List Inspector</span>
+                            <span class="text-[10px] text-slate-400">JS Object Format</span>
+                        </div>
+                        <pre id="adj-list-code" class="text-emerald-400 leading-relaxed">
+<!-- Dynamic Adjacency List -->
+                        </pre>
+                        <div class="text-[11px] text-slate-400 font-sans border-t border-slate-800 pt-2 leading-relaxed">
+                            💡 **คำอธิบาย:** Graph G = (V, E) มี 8 Vertices และ 10 Weighted Edges เก็บโครงสร้างความสัมพันธ์เพื่อประมวลผลคำนวณระยะทาง
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE 2: TREE HIERARCHY & TRAVERSAL VISUALIZER -->
+            <div class="bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 pb-4">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-sage-700 bg-sage-100 px-2.5 py-1 rounded-full">Discrete Math Concept: Tree Principles</span>
+                        <h3 class="text-2xl font-bold text-sage-900 mt-2">2. แผนภาพต้นไม้หมวดหมู่ (Zoo Category Hierarchy Tree)</h3>
+                        <p class="text-xs text-gray-500">แสดงโครงสร้างลำดับชั้น (Root ➔ Parent ➔ Child ➔ Leaf Node) พร้อมปุ่มจำลองการท่องโหนด</p>
+                    </div>
+
+                    <!-- Traversal Buttons -->
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="runTreeTraversal('preorder')" class="bg-sage-800 hover:bg-sage-900 text-white text-xs px-3.5 py-2 rounded-xl font-medium transition flex items-center">
+                            <i data-lucide="play" class="w-3.5 h-3.5 mr-1"></i> Preorder
+                        </button>
+                        <button onclick="runTreeTraversal('postorder')" class="bg-sage-800 hover:bg-sage-900 text-white text-xs px-3.5 py-2 rounded-xl font-medium transition flex items-center">
+                            <i data-lucide="play" class="w-3.5 h-3.5 mr-1"></i> Postorder
+                        </button>
+                        <button onclick="runTreeTraversal('bfs')" class="bg-sage-800 hover:bg-sage-900 text-white text-xs px-3.5 py-2 rounded-xl font-medium transition flex items-center">
+                            <i data-lucide="play" class="w-3.5 h-3.5 mr-1"></i> BFS Tree
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tree Visualization Canvas -->
+                <div class="bg-sage-50/50 p-6 rounded-2xl border border-sage-100 overflow-x-auto">
+                    <div id="tree-container" class="min-w-[750px] flex justify-center py-4">
+                        <!-- Dynamic Tree HTML -->
+                    </div>
+                </div>
+
+                <!-- Traversal Output Log & Selected Node Details -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="sm:col-span-2 bg-gray-50 p-4 rounded-xl border border-gray-200 text-sm space-y-2">
+                        <div class="font-bold text-sage-900 flex items-center">
+                            <i data-lucide="terminal" class="w-4 h-4 mr-2 text-sage-700"></i>ผลลัพธ์การท่องโหนด (Traversal Output Log):
+                        </div>
+                        <div id="traversal-output" class="font-mono text-sage-800 text-xs bg-white p-3 rounded-lg border border-gray-200 min-h-[44px] flex items-center leading-relaxed">
+                            คลิกปุ่มด้านบนเพื่อแสดงลำดับการท่องโหนดแบบเรียลไทม์...
+                        </div>
+                    </div>
+
+                    <div id="node-inspector-box" class="bg-sage-50 p-4 rounded-xl border border-sage-200 text-xs space-y-1">
+                        <div class="font-bold text-sage-900">🔍 โหนดที่เลือก (Node Inspector):</div>
+                        <div id="inspect-node-name" class="font-semibold text-sage-800">คลิกที่โหนดเพื่อดูรายละเอียด</div>
+                        <div id="inspect-node-role" class="text-gray-600">Role: -</div>
+                        <div id="inspect-node-path" class="text-gray-600">Path from Root: -</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PAGE 4: PAID ORDERS & DIGITAL VOUCHERS ================= -->
+        <section id="page-orders" class="hidden space-y-8">
+            <div class="border-b border-gray-200 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 no-print">
+                <div>
+                    <h2 class="text-3xl font-bold text-sage-900">รายการสั่งซื้อ & บัตรเข้าชมที่ชำระเงินแล้ว</h2>
+                    <p class="text-gray-600 text-sm mt-1">แสดง e-Ticket, QR Code สำหรับผ่านประตูเข้าชม และสรุปเส้นทางเดินชมที่แนะนำ</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="window.print()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl text-xs font-semibold flex items-center transition">
+                        <i data-lucide="printer" class="w-4 h-4 mr-1.5"></i> พิมพ์บัตรเข้าชม
+                    </button>
+                    <button onclick="clearOrders()" class="text-xs text-red-500 hover:underline">ล้างประวัติการสั่งซื้อ</button>
+                </div>
+            </div>
+
+            <!-- Orders Container -->
+            <div id="orders-list-container" class="space-y-6">
+                <!-- Dynamic Paid Orders Cards -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ANIMAL DETAIL MODAL -->
+    <div id="animal-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white max-w-lg w-full rounded-3xl overflow-hidden shadow-2xl space-y-4 p-6 relative">
+            <button onclick="closeAnimalModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">✕</button>
+            <img id="modal-img" src="" alt="Animal" class="w-full h-56 object-cover rounded-2xl">
+            <div>
+                <span id="modal-category" class="text-xs font-bold text-sage-700 uppercase bg-sage-100 px-2.5 py-1 rounded-full">Category</span>
+                <h3 id="modal-title" class="text-2xl font-bold text-sage-900 mt-2">Animal Name</h3>
+                <p id="modal-desc" class="text-gray-600 text-sm mt-2 leading-relaxed">Description...</p>
+            </div>
+            <div class="p-4 bg-sage-50 rounded-2xl text-xs space-y-1 border border-sage-100">
+                <div class="font-bold text-sage-900">📌 ตำแหน่งสถานที่ในระบบ Graph:</div>
+                <div id="modal-node-info" class="text-sage-700 font-medium">Vertex: V1 - Savanna Zone</div>
+            </div>
+            <div class="flex justify-end space-x-3 pt-2">
+                <button onclick="closeAnimalModal()" class="px-5 py-2.5 bg-gray-200 text-gray-700 rounded-xl text-sm font-semibold">ปิดหน้าต่าง</button>
+                <button onclick="quickBookFromModal()" class="px-5 py-2.5 bg-sage-800 hover:bg-sage-900 text-white rounded-xl text-sm font-semibold shadow-md">จองบัตรเข้าชมโซนนี้</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAYMENT MODAL -->
+    <div id="payment-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white max-w-md w-full rounded-3xl p-6 shadow-2xl space-y-6 relative">
+            <button onclick="closePaymentModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">✕</button>
+
+            <div class="text-center space-y-2">
+                <div class="w-12 h-12 bg-sage-100 text-sage-800 rounded-2xl mx-auto flex items-center justify-center font-bold text-xl">💳</div>
+                <h3 class="text-2xl font-bold text-sage-900">จำลองการชำระเงิน</h3>
+                <p class="text-xs text-gray-500">สแกน QR Code เพื่อชำระเงินผ่าน PromptPay หรือใช้บัตรเครดิต</p>
+            </div>
+
+            <!-- Simulated PromptPay QR -->
+            <div class="bg-sage-50 p-4 rounded-2xl border border-sage-200 text-center space-y-3">
+                <div class="text-xs font-bold text-sage-800">THAI QR PAYMENT / PROMPTPAY</div>
+                <div class="w-40 h-40 bg-white mx-auto p-2 rounded-xl border border-gray-200 flex items-center justify-center shadow-inner">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=BIOGRAPH-ZOO-PAYMENT-DEMO" alt="PromptPay QR" class="w-full h-full object-contain">
+                </div>
+                <div class="text-sm font-extrabold text-sage-800" id="pay-modal-amount">ยอดชำระ: ฿250</div>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="confirmSimulatedPayment()" class="w-full py-3.5 bg-sage-800 hover:bg-sage-900 text-white rounded-xl font-bold shadow-lg transition flex items-center justify-center">
+                    <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>ยืนยันชำระเงินเรียบร้อย (Instant Confirm)
+                </button>
+                <button onclick="closePaymentModal()" class="w-full py-2 text-xs text-gray-500 hover:text-gray-700">ยกเลิกรายการ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-sage-900 text-white py-8 border-t border-sage-800 mt-12 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center sm:text-left flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-sage-700 rounded-lg flex items-center justify-center text-white">
+                    🌿
+                </div>
+                <span class="text-lg font-bold tracking-tight">BioGraph Zoo</span>
+            </div>
+            <p class="text-xs text-sage-200">
+                © 2026 BioGraph Zoo - Discrete Mathematics for IT Application Design Project
+            </p>
+            <div class="text-xs text-sage-200">
+                Graph Theory & Tree Structures Implementation
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        /* ==========================================================================
+           1. APPLICATION DATA STRUCTURES (DISCRETE MATH GRAPH & TREE)
+           ========================================================================== */
+
+        // ANIMALS DATA (Page 1 Showcase)
+        const ANIMALS_DATA = [
+            {
+                id: 'lion',
+                name: 'สิงโตแอฟริกา (African Lion)',
+                category: 'mammals',
+                categoryTH: 'สัตว์เลี้ยงลูกด้วยนม',
+                nodeId: 'V1',
+                zone: 'Savanna Zone (V1)',
+                image: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?auto=format&fit=crop&w=600&q=80',
+                desc: 'เจ้าแห่งทุ่งหญ้าซาวันน่า อาศัยอยู่รวมกันเป็นฝูง มีเสียงคำรามก้องกังวานที่ได้ยินไกลถึง 8 กิโลเมตร'
+            },
+            {
+                id: 'giraffe',
+                name: 'ยีราฟลายเมฆ (Rothschild Giraffe)',
+                category: 'mammals',
+                categoryTH: 'สัตว์เลี้ยงลูกด้วยนม',
+                nodeId: 'V1',
+                zone: 'Savanna Zone (V1)',
+                image: 'https://images.unsplash.com/photo-1547721064-da6cfb341d50?auto=format&fit=crop&w=600&q=80',
+                desc: 'สัตว์บกที่สูงที่สุดในโลก มีลิ้นยาวพิเศษมากกว่า 45 เซนติเมตร ใช้เกี่ยวใบไม้บนต้นไม้อย่างคล่องแคล่ว'
+            },
+            {
+                id: 'tiger',
+                name: 'เสือโคร่งเบงกอล (Bengal Tiger)',
+                category: 'mammals',
+                categoryTH: 'สัตว์เลี้ยงลูกด้วยนม',
+                nodeId: 'V2',
+                zone: 'Tropical Rainforest (V2)',
+                image: 'https://images.unsplash.com/photo-1561731216-c3a4d99437d5?auto=format&fit=crop&w=600&q=80',
+                desc: 'นักล่าผู้สง่างามแห่งป่าดิบชื้น มีลายแถบเฉพาะตัวที่ไม่ซ้ำกันเลยในแต่ละตัว'
+            },
+            {
+                id: 'macaw',
+                name: 'นกมาคอว์สีฟ้าเหลือง (Blue Macaw)',
+                category: 'birds',
+                categoryTH: 'สัตว์ปีก',
+                nodeId: 'V3',
+                zone: 'Aviary & Bird World (V3)',
+                image: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?auto=format&fit=crop&w=600&q=80',
+                desc: 'นกแก้วขนาดใหญ่ที่มีสีสันสดใส มีเฉลียวฉลาดสูง และสามารถจดจำคำพูดของมนุษย์ได้'
+            },
+            {
+                id: 'iguana',
+                name: 'อิกัวน่าเขียว (Green Iguana)',
+                category: 'reptiles',
+                categoryTH: 'สัตว์เลื้อยคลาน',
+                nodeId: 'V4',
+                zone: 'Reptile House (V4)',
+                image: 'https://images.unsplash.com/photo-1504450758481-7338eba7524a?auto=format&fit=crop&w=600&q=80',
+                desc: 'สัตว์เลื้อยคลานกินพืชขนาดยักษ์ สามารถปรับสีผิวตามสภาพแวดล้อมและอุณหภูมิร่างกาย'
+            },
+            {
+                id: 'penguin',
+                name: 'เพนกวินจักรพรรดิ (Emperor Penguin)',
+                category: 'aquatic',
+                categoryTH: 'สัตว์น้ำ & ขั้วโลก',
+                nodeId: 'V5',
+                zone: 'Aquarium & Polar (V5)',
+                image: 'https://images.unsplash.com/photo-1598439210625-5067c578f3f6?auto=format&fit=crop&w=600&q=80',
+                desc: 'นกที่ว่ายน้ำได้อย่างคล่องแคล่ว อาศัยในสภาวะความเย็นจัด มีระบบปรับอุณหภูมิร่างกายพิเศษ'
+            }
+        ];
+
+        // GRAPH DATA DEFINITION (8 Vertices, 10 Weighted Edges)
+        const ZOO_GRAPH = {
+            nodes: [
+                { id: 'V0', name: 'Entrance Gate', x: 100, y: 220, type: 'start' },
+                { id: 'V1', name: 'African Savanna', x: 260, y: 100, type: 'zone' },
+                { id: 'V2', name: 'Tropical Rainforest', x: 260, y: 340, type: 'zone' },
+                { id: 'V3', name: 'Aviary & Bird World', x: 440, y: 80, type: 'zone' },
+                { id: 'V4', name: 'Reptile House', x: 440, y: 360, type: 'zone' },
+                { id: 'V5', name: 'Aquarium Kingdom', x: 620, y: 120, type: 'zone' },
+                { id: 'V6', name: 'Central Plaza', x: 440, y: 220, type: 'hub' },
+                { id: 'V7', name: 'Night Safari', x: 680, y: 260, type: 'zone' }
+            ],
+            edges: [
+                { source: 'V0', target: 'V1', weight: 150 },
+                { source: 'V0', target: 'V2', weight: 180 },
+                { source: 'V0', target: 'V6', weight: 200 },
+                { source: 'V1', target: 'V3', weight: 120 },
+                { source: 'V1', target: 'V6', weight: 100 },
+                { source: 'V2', target: 'V4', weight: 140 },
+                { source: 'V2', target: 'V6', weight: 110 },
+                { source: 'V3', target: 'V5', weight: 160 },
+                { source: 'V4', target: 'V7', weight: 210 },
+                { source: 'V6', target: 'V5', weight: 190 },
+                { source: 'V6', target: 'V7', weight: 170 }
+            ]
+        };
+
+        // ADJACENCY LIST GENERATOR
+        function getAdjacencyList() {
+            const adj = {};
+            ZOO_GRAPH.nodes.forEach(node => adj[node.id] = []);
+            ZOO_GRAPH.edges.forEach(edge => {
+                adj[edge.source].push({ node: edge.target, weight: edge.weight });
+                adj[edge.target].push({ node: edge.source, weight: edge.weight }); // Undirected
+            });
+            return adj;
+        }
+
+        // TREE HIERARCHY DATA STRUCTURE
+        const ZOO_TREE = {
+            id: 'root',
+            name: 'BioGraph Zoo',
+            role: 'Root',
+            children: [
+                {
+                    id: 'zone-A',
+                    name: 'Zone A: Savanna & Rainforest',
+                    role: 'Parent',
+                    children: [
+                        { id: 'sub-a1', name: 'African Savanna', role: 'Child', children: [{ id: 'leaf-1', name: 'African Lion', role: 'Leaf' }, { id: 'leaf-2', name: 'Rothschild Giraffe', role: 'Leaf' }] },
+                        { id: 'sub-a2', name: 'Tropical Rainforest', role: 'Child', children: [{ id: 'leaf-3', name: 'Bengal Tiger', role: 'Leaf' }] }
+                    ]
+                },
+                {
+                    id: 'zone-B',
+                    name: 'Zone B: Aviary & Aquarium',
+                    role: 'Parent',
+                    children: [
+                        { id: 'sub-b1', name: 'High Aviary Dome', role: 'Child', children: [{ id: 'leaf-4', name: 'Blue Macaw', role: 'Leaf' }] },
+                        { id: 'sub-b2', name: 'Deep Sea Aquarium', role: 'Child', children: [{ id: 'leaf-5', name: 'Emperor Penguin', role: 'Leaf' }] }
+                    ]
+                },
+                {
+                    id: 'zone-C',
+                    name: 'Zone C: Reptiles & Flora',
+                    role: 'Parent',
+                    children: [
+                        { id: 'sub-c1', name: 'Cold-blooded House', role: 'Child', children: [{ id: 'leaf-6', name: 'Green Iguana', role: 'Leaf' }] }
+                    ]
+                }
+            ]
+        };
+
+        // STATE MANAGEMENT
+        let currentTickets = { adult: 1, child: 0, senior: 0, foreigner: 0 };
+        let activeOrders = [];
+        let highlightedPath = ['V0', 'V1'];
+
+        // DEFAULT SAMPLE PAID TICKET FOR INITIAL LOAD
+        const SAMPLE_ORDER = {
+            orderId: 'BGZ-889120',
+            date: new Date().toISOString().split('T')[0],
+            name: 'สมชาย ใจดี',
+            tickets: { adult: 2, child: 1, senior: 0, foreigner: 0 },
+            totalAmount: 620,
+            routePath: ['V0', 'V1', 'V3', 'V5'],
+            timestamp: '10:30 น.',
+            status: 'PAID'
+        };
+
+        /* ==========================================================================
+           2. SPA PAGE SWITCHING & MOBILE MENU
+           ========================================================================== */
+        function navigateTo(pageId) {
+            const pages = ['page-home', 'page-tickets', 'page-map', 'page-orders'];
+            pages.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+
+                const navBtn = document.getElementById(`nav-${id}`);
+                if (navBtn) navBtn.classList.remove('active-nav-item');
+            });
+
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) targetPage.classList.remove('hidden');
+
+            const activeNav = document.getElementById(`nav-${pageId}`);
+            if (activeNav) activeNav.classList.add('active-nav-item');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Trigger Page Render Events
+            if (pageId === 'page-map') {
+                renderGraphCanvas();
+                renderAdjacencyListCode();
+                renderTreeUI();
+            } else if (pageId === 'page-orders') {
+                renderOrdersList();
+            }
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        /* ==========================================================================
+           3. PAGE 1: ANIMAL GALLERY & MODAL
+           ========================================================================== */
+        function renderAnimalGallery(filter = 'all') {
+            const container = document.getElementById('animal-grid');
+            container.innerHTML = '';
+
+            const filtered = filter === 'all'
+                ? ANIMALS_DATA
+                : ANIMALS_DATA.filter(a => a.category === filter);
+
+            filtered.forEach(animal => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition duration-300 flex flex-col justify-between group";
+                card.innerHTML = `
+                    <div>
+                        <div class="relative overflow-hidden h-48">
+                            <img src="${animal.image}" alt="${animal.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                            <span class="absolute top-3 right-3 bg-white/90 backdrop-blur-md text-sage-800 text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+                                ${animal.categoryTH}
+                            </span>
+                        </div>
+                        <div class="p-5 space-y-2">
+                            <span class="text-[11px] font-semibold text-sage-700 bg-sage-50 px-2.5 py-1 rounded-md border border-sage-100">
+                                📍 ${animal.zone}
+                            </span>
+                            <h3 class="font-bold text-lg text-sage-900">${animal.name}</h3>
+                            <p class="text-xs text-gray-500 line-clamp-2 leading-relaxed">${animal.desc}</p>
+                        </div>
+                    </div>
+                    <div class="p-5 pt-0 flex justify-between items-center">
+                        <button onclick="openAnimalModal('${animal.id}')" class="text-xs font-bold text-sage-800 hover:text-sage-900 flex items-center">
+                            ดูรายละเอียด <i data-lucide="chevron-right" class="w-4 h-4 ml-1"></i>
+                        </button>
+                        <button onclick="navigateTo('page-tickets')" class="bg-sage-100 hover:bg-sage-200 text-sage-800 p-2 rounded-xl transition">
+                            <i data-lucide="ticket" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        function filterAnimals(cat) {
+            document.querySelectorAll('#animal-filter-container button').forEach(btn => {
+                btn.className = "filter-btn px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-600 hover:bg-sage-100 transition border border-gray-200";
+            });
+            event.target.className = "filter-btn active-filter px-4 py-2 rounded-xl text-sm font-medium bg-sage-800 text-white transition shadow-sm";
+            renderAnimalGallery(cat);
+        }
+
+        function openAnimalModal(id) {
+            const animal = ANIMALS_DATA.find(a => a.id === id);
+            if (!animal) return;
+
+            document.getElementById('modal-img').src = animal.image;
+            document.getElementById('modal-title').innerText = animal.name;
+            document.getElementById('modal-category').innerText = animal.categoryTH;
+            document.getElementById('modal-desc').innerText = animal.desc;
+            document.getElementById('modal-node-info').innerText = `Vertex Node: ${animal.nodeId} (${animal.zone})`;
+
+            document.getElementById('animal-modal').classList.remove('hidden');
+        }
+
+        function closeAnimalModal() {
+            document.getElementById('animal-modal').classList.add('hidden');
+        }
+
+        function quickBookFromModal() {
+            closeAnimalModal();
+            navigateTo('page-tickets');
+        }
+
+        /* ==========================================================================
+           4. PAGE 2: BOOKING FORM & DIJKSTRA ALGORITHM
+           ========================================================================== */
+        function initBookingForm() {
+            const startSelect = document.getElementById('path-start');
+            const endSelect = document.getElementById('path-end');
+
+            startSelect.innerHTML = '';
+            endSelect.innerHTML = '';
+
+            ZOO_GRAPH.nodes.forEach(node => {
+                startSelect.innerHTML += `<option value="${node.id}">${node.id} - ${node.name}</option>`;
+                endSelect.innerHTML += `<option value="${node.id}">${node.id} - ${node.name}</option>`;
+            });
+
+            startSelect.value = 'V0';
+            endSelect.value = 'V1';
+
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('booking-date').value = today;
+
+            calculateTourRoute();
+        }
+
+        function updateTicketCount(type, delta) {
+            if (currentTickets[type] + delta >= 0) {
+                currentTickets[type] += delta;
+                document.getElementById(`count-${type}`).innerText = currentTickets[type];
+                updateBookingSummary();
+            }
+        }
+
+        function updateBookingSummary() {
+            const totalTickets = currentTickets.adult + currentTickets.child + currentTickets.senior + currentTickets.foreigner;
+            const totalPrice = (currentTickets.adult * 250) + (currentTickets.child * 120) + (currentTickets.senior * 150) + (currentTickets.foreigner * 350);
+
+            document.getElementById('summary-tickets-count').innerText = `${totalTickets} ใบ`;
+            document.getElementById('summary-total-price').innerText = `฿${totalPrice}`;
+
+            const dateVal = document.getElementById('booking-date').value;
+            const nameVal = document.getElementById('booking-name').value;
+            document.getElementById('summary-date').innerText = dateVal || 'วันนี้';
+            document.getElementById('summary-name').innerText = nameVal || 'ผู้จองทั่วไป';
+        }
+
+        // DIJKSTRA SHORTEST PATH ALGORITHM
+        function dijkstraShortestPath(startId, endId) {
+            const adj = getAdjacencyList();
+            const distances = {};
+            const previous = {};
+            const nodes = new Set();
+
+            ZOO_GRAPH.nodes.forEach(node => {
+                distances[node.id] = Infinity;
+                previous[node.id] = null;
+                nodes.add(node.id);
+            });
+
+            distances[startId] = 0;
+
+            while (nodes.size > 0) {
+                let smallest = null;
+                nodes.forEach(node => {
+                    if (smallest === null || distances[node] < distances[smallest]) {
+                        smallest = node;
+                    }
+                });
+
+                if (smallest === endId || distances[smallest] === Infinity) {
+                    break;
+                }
+
+                nodes.delete(smallest);
+
+                for (let neighbor of adj[smallest]) {
+                    let alt = distances[smallest] + neighbor.weight;
+                    if (alt < distances[neighbor.node]) {
+                        distances[neighbor.node] = alt;
+                        previous[neighbor.node] = smallest;
+                    }
+                }
+            }
+
+            const path = [];
+            let curr = endId;
+            while (curr !== null) {
+                path.unshift(curr);
+                curr = previous[curr];
+            }
+
+            return {
+                path: path,
+                distance: distances[endId] === Infinity ? 0 : distances[endId]
+            };
+        }
+
+        function calculateTourRoute() {
+            const startNode = document.getElementById('path-start').value;
+            const endNode = document.getElementById('path-end').value;
+
+            const result = dijkstraShortestPath(startNode, endNode);
+            highlightedPath = result.path;
+
+            const nodeNames = result.path.map(id => {
+                const node = ZOO_GRAPH.nodes.find(n => n.id === id);
+                return `${node.name} (${id})`;
+            });
+
+            document.getElementById('route-path-nodes').innerText = nodeNames.join(' ➔ ');
+            document.getElementById('route-distance').innerText = `ระยะทางรวม: ${result.distance} เมตร`;
+            document.getElementById('summary-route').innerText = result.path.join(' ➔ ');
+
+            updateBookingSummary();
+        }
+
+        function openPaymentModal() {
+            const totalTickets = currentTickets.adult + currentTickets.child + currentTickets.senior + currentTickets.foreigner;
+            if (totalTickets === 0) {
+                alert('กรุณาเลือกจำนวนบัตรเข้าชมอย่างน้อย 1 ใบ');
+                return;
+            }
+
+            const totalPrice = (currentTickets.adult * 250) + (currentTickets.child * 120) + (currentTickets.senior * 150) + (currentTickets.foreigner * 350);
+            document.getElementById('pay-modal-amount').innerText = `ยอดชำระสุทธิ: ฿${totalPrice}`;
+            document.getElementById('payment-modal').classList.remove('hidden');
+        }
+
+        function closePaymentModal() {
+            document.getElementById('payment-modal').classList.add('hidden');
+        }
+
+        function confirmSimulatedPayment() {
+            closePaymentModal();
+
+            const totalPrice = (currentTickets.adult * 250) + (currentTickets.child * 120) + (currentTickets.senior * 150) + (currentTickets.foreigner * 350);
+            const dateVal = document.getElementById('booking-date').value || new Date().toISOString().split('T')[0];
+            const nameVal = document.getElementById('booking-name').value || 'สมชาย ใจดี';
+
+            const newOrder = {
+                orderId: 'BGZ-' + Math.floor(100000 + Math.random() * 900000),
+                date: dateVal,
+                name: nameVal,
+                tickets: { ...currentTickets },
+                totalAmount: totalPrice,
+                routePath: [...highlightedPath],
+                timestamp: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+                status: 'PAID'
+            };
+
+            activeOrders.unshift(newOrder);
+
+            // Save to localStorage
+            localStorage.setItem('biograph_orders', JSON.stringify(activeOrders));
+
+            updateOrderBadge();
+
+            // Reset Ticket Counters
+            currentTickets = { adult: 1, child: 0, senior: 0, foreigner: 0 };
+            document.getElementById('count-adult').innerText = '1';
+            document.getElementById('count-child').innerText = '0';
+            document.getElementById('count-senior').innerText = '0';
+            document.getElementById('count-foreigner').innerText = '0';
+            updateBookingSummary();
+
+            navigateTo('page-orders');
+        }
+
+        function updateOrderBadge() {
+            const badge = document.getElementById('order-badge');
+            badge.innerText = activeOrders.length;
+            badge.classList.remove('hidden');
+        }
+
+        /* ==========================================================================
+           5. PAGE 3: GRAPH & TREE VISUALIZER
+           ========================================================================== */
+        function renderGraphCanvas() {
+            const svg = document.getElementById('graph-svg');
+            svg.innerHTML = '';
+
+            // Edges
+            ZOO_GRAPH.edges.forEach(edge => {
+                const sourceNode = ZOO_GRAPH.nodes.find(n => n.id === edge.source);
+                const targetNode = ZOO_GRAPH.nodes.find(n => n.id === edge.target);
+
+                let isHighlighted = false;
+                for (let i = 0; i < highlightedPath.length - 1; i++) {
+                    if ((highlightedPath[i] === edge.source && highlightedPath[i+1] === edge.target) ||
+                        (highlightedPath[i] === edge.target && highlightedPath[i+1] === edge.source)) {
+                        isHighlighted = true;
+                        break;
+                    }
+                }
+
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', sourceNode.x);
+                line.setAttribute('y1', sourceNode.y);
+                line.setAttribute('x2', targetNode.x);
+                line.setAttribute('y2', targetNode.y);
+                line.setAttribute('stroke', isHighlighted ? '#D4A373' : '#CBD5E1');
+                line.setAttribute('stroke-width', isHighlighted ? '4' : '2');
+
+                svg.appendChild(line);
+
+                // Weight Label
+                const midX = (sourceNode.x + targetNode.x) / 2;
+                const midY = (sourceNode.y + targetNode.y) / 2;
+
+                const textBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                textBg.setAttribute('x', midX - 14);
+                textBg.setAttribute('y', midY - 9);
+                textBg.setAttribute('width', '28');
+                textBg.setAttribute('height', '16');
+                textBg.setAttribute('rx', '4');
+                textBg.setAttribute('fill', '#FFFFFF');
+                textBg.setAttribute('stroke', '#E2E8F0');
+                svg.appendChild(textBg);
+
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', midX);
+                text.setAttribute('y', midY + 3);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('font-size', '10');
+                text.setAttribute('font-weight', '600');
+                text.setAttribute('fill', '#64748B');
+                text.textContent = `${edge.weight}m`;
+                svg.appendChild(text);
+            });
+
+            // Vertices
+            ZOO_GRAPH.nodes.forEach(node => {
+                const isPathNode = highlightedPath.includes(node.id);
+
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('class', 'cursor-pointer');
+                g.onclick = () => alert(`Vertex Node ${node.id}: ${node.name}`);
+
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', node.x);
+                circle.setAttribute('cy', node.y);
+                circle.setAttribute('r', '20');
+                circle.setAttribute('fill', isPathNode ? '#1B4D3E' : '#2E7D32');
+                circle.setAttribute('stroke', isPathNode ? '#D4A373' : '#FFFFFF');
+                circle.setAttribute('stroke-width', isPathNode ? '4' : '2');
+
+                g.appendChild(circle);
+
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', node.x);
+                text.setAttribute('y', node.y + 4);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('font-size', '11');
+                text.setAttribute('font-weight', 'bold');
+                text.setAttribute('fill', '#FFFFFF');
+                text.textContent = node.id;
+                g.appendChild(text);
+
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                label.setAttribute('x', node.x);
+                label.setAttribute('y', node.y + 36);
+                label.setAttribute('text-anchor', 'middle');
+                label.setAttribute('font-size', '11');
+                label.setAttribute('font-weight', '600');
+                label.setAttribute('fill', '#1B4D3E');
+                label.textContent = node.name;
+                g.appendChild(label);
+
+                svg.appendChild(g);
+            });
+        }
+
+        function renderAdjacencyListCode() {
+            const adj = getAdjacencyList();
+            let formatted = `// JavaScript Adjacency List Structure\nconst zooGraphAdjacencyList = {\n`;
+
+            for (let node in adj) {
+                formatted += `  "${node}": [\n`;
+                adj[node].forEach(item => {
+                    formatted += `    { node: "${item.node}", weight: ${item.weight} },\n`;
+                });
+                formatted += `  ],\n`;
+            }
+            formatted += `};`;
+
+            document.getElementById('adj-list-code').innerText = formatted;
+        }
+
+        function runGraphBFS() {
+            highlightedPath = ['V0', 'V1', 'V2', 'V6', 'V3', 'V4', 'V5', 'V7'];
+            renderGraphCanvas();
+        }
+
+        function resetGraphHighlight() {
+            highlightedPath = [];
+            renderGraphCanvas();
+        }
+
+        // TREE VISUALIZER & INSPECTOR
+        function renderTreeUI() {
+            const container = document.getElementById('tree-container');
+            container.innerHTML = createTreeNodeHTML(ZOO_TREE);
+        }
+
+        function createTreeNodeHTML(node) {
+            let roleBadgeClass = 'bg-sage-800 text-white';
+            if (node.role === 'Parent') roleBadgeClass = 'bg-amberGold text-white';
+            if (node.role === 'Child') roleBadgeClass = 'bg-sage-200 text-sage-900';
+            if (node.role === 'Leaf') roleBadgeClass = 'bg-gray-100 text-gray-700 border border-gray-300';
+
+            let html = `
+                <div class="flex flex-col items-center mx-2 my-1">
+                    <div id="tree-node-${node.id}" onclick="inspectTreeNode('${node.id}', '${node.name}', '${node.role}')" class="tree-node cursor-pointer p-3 rounded-2xl bg-white border border-gray-200 shadow-sm text-center min-w-[130px] hover:shadow-md transition duration-300">
+                        <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${roleBadgeClass} inline-block mb-1">
+                            ${node.role}
+                        </span>
+                        <div class="font-bold text-xs text-sage-900">${node.name}</div>
+                    </div>
+            `;
+
+            if (node.children && node.children.length > 0) {
+                html += `<div class="w-0.5 h-4 bg-gray-300 my-1"></div>`;
+                html += `<div class="flex border-t border-gray-300 pt-3 space-x-2">`;
+                node.children.forEach(child => {
+                    html += createTreeNodeHTML(child);
+                });
+                html += `</div>`;
+            }
+
+            html += `</div>`;
+            return html;
+        }
+
+        function inspectTreeNode(id, name, role) {
+            document.getElementById('inspect-node-name').innerText = `${name} (${id})`;
+            document.getElementById('inspect-node-role').innerText = `Role: ${role} Node`;
+
+            // Calculate Path from Root
+            let pathStr = `Root ➔ ${name}`;
+            if (role === 'Root') pathStr = 'BioGraph Zoo (Root)';
+            document.getElementById('inspect-node-path').innerText = `Path: ${pathStr}`;
+        }
+
+        // TREE TRAVERSAL ALGORITHMS
+        function runTreeTraversal(type) {
+            const resultOrder = [];
+
+            if (type === 'preorder') {
+                function preorder(node) {
+                    if (!node) return;
+                    resultOrder.push(node);
+                    if (node.children) node.children.forEach(c => preorder(c));
+                }
+                preorder(ZOO_TREE);
+            } else if (type === 'postorder') {
+                function postorder(node) {
+                    if (!node) return;
+                    if (node.children) node.children.forEach(c => postorder(c));
+                    resultOrder.push(node);
+                }
+                postorder(ZOO_TREE);
+            } else if (type === 'bfs') {
+                const queue = [ZOO_TREE];
+                while (queue.length > 0) {
+                    const curr = queue.shift();
+                    resultOrder.push(curr);
+                    if (curr.children) {
+                        curr.children.forEach(c => queue.push(c));
+                    }
+                }
+            }
+
+            animateTraversal(resultOrder, type);
+        }
+
+        function animateTraversal(nodes, typeName) {
+            document.querySelectorAll('.tree-node').forEach(el => {
+                el.classList.remove('ring-4', 'ring-amberGold', 'bg-amber-50');
+            });
+
+            const outputEl = document.getElementById('traversal-output');
+            outputEl.innerText = `[${typeName.toUpperCase()}] : `;
+
+            nodes.forEach((node, idx) => {
+                setTimeout(() => {
+                    const nodeEl = document.getElementById(`tree-node-${node.id}`);
+                    if (nodeEl) {
+                        nodeEl.classList.add('ring-4', 'ring-amberGold', 'bg-amber-50');
+                    }
+                    outputEl.innerText += `${node.name} (${node.role}) ${idx < nodes.length - 1 ? ' ➔ ' : ''}`;
+                }, idx * 500);
+            });
+        }
+
+        /* ==========================================================================
+           6. PAGE 4: PAID ORDERS & DIGITAL TICKETS
+           ========================================================================== */
+        function renderOrdersList() {
+            const container = document.getElementById('orders-list-container');
+            container.innerHTML = '';
+
+            if (activeOrders.length === 0) {
+                activeOrders.push(SAMPLE_ORDER);
+            }
+
+            activeOrders.forEach(order => {
+                const card = document.createElement('div');
+                card.className = "printable-ticket bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-md space-y-6 relative overflow-hidden";
+                card.innerHTML = `
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-gray-100 pb-4">
+                        <div>
+                            <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">
+                                ✓ ${order.status} (ชำระเงินเรียบร้อยแล้ว)
+                            </span>
+                            <h3 class="text-xl font-bold text-sage-900 mt-2">รหัสคำสั่งซื้อ: ${order.orderId}</h3>
+                            <p class="text-xs text-gray-500">วันที่เข้าชม: ${order.date} | ผู้ติดต่อ: ${order.name} | เวลาทำรายการ: ${order.timestamp}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs text-gray-400">ยอดชำระสุทธิ</span>
+                            <div class="text-2xl font-extrabold text-sage-700">฿${order.totalAmount}</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                        <div class="md:col-span-2 space-y-3 text-sm">
+                            <div class="font-bold text-sage-900">รายการบัตรที่สั่งซื้อ:</div>
+                            <ul class="text-xs text-gray-600 space-y-1 bg-sage-50/50 p-3 rounded-xl border border-sage-100">
+                                ${order.tickets.adult > 0 ? `<li>• บัตรผู้ใหญ่: ${order.tickets.adult} ใบ</li>` : ''}
+                                ${order.tickets.child > 0 ? `<li>• บัตรเด็ก/นักศึกษา: ${order.tickets.child} ใบ</li>` : ''}
+                                ${order.tickets.senior > 0 ? `<li>• ผู้สูงอายุ (Senior 60+): ${order.tickets.senior} ใบ</li>` : ''}
+                                ${order.tickets.foreigner > 0 ? `<li>• ชาวต่างชาติ (Foreigner): ${order.tickets.foreigner} ใบ</li>` : ''}
+                            </ul>
+
+                            <div class="font-bold text-sage-900 pt-2">เส้นทางเดินชมแนะนำ (Graph Optimal Path):</div>
+                            <div class="text-xs font-mono text-sage-800 bg-gray-50 p-2.5 rounded-lg border border-gray-200">
+                                ${order.routePath.join(' ➔ ')}
+                            </div>
+                        </div>
+
+                        <!-- QR Code Area -->
+                        <div class="flex flex-col items-center justify-center p-4 bg-sage-50 rounded-2xl border border-sage-200 text-center">
+                            <div id="qrcode-${order.orderId}" class="p-2 bg-white rounded-xl shadow-sm mb-2"></div>
+                            <span class="text-[10px] text-gray-500 font-mono">สแกนเพื่อเข้าสวนสัตว์</span>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(card);
+
+                setTimeout(() => {
+                    new QRCode(document.getElementById(`qrcode-${order.orderId}`), {
+                        text: `BIOGRAPH-ZOO-TICKET:${order.orderId}`,
+                        width: 90,
+                        height: 90
+                    });
+                }, 100);
+            });
+
+            lucide.createIcons();
+        }
+
+        function clearOrders() {
+            if (confirm('คุณต้องการล้างประวัติการสั่งซื้อทั้งหมดใช่หรือไม่?')) {
+                activeOrders = [SAMPLE_ORDER];
+                localStorage.removeItem('biograph_orders');
+                updateOrderBadge();
+                renderOrdersList();
+            }
+        }
+
+        /* ==========================================================================
+           7. INITIALIZATION ON LOAD
+           ========================================================================== */
+        window.onload = function() {
+            lucide.createIcons();
+
+            // Load saved orders from localStorage
+            const saved = localStorage.getItem('biograph_orders');
+            if (saved) {
+                try {
+                    activeOrders = JSON.parse(saved);
+                } catch (e) {
+                    activeOrders = [SAMPLE_ORDER];
+                }
+            } else {
+                activeOrders = [SAMPLE_ORDER];
+            }
+
+            updateOrderBadge();
+            renderAnimalGallery();
+            initBookingForm();
+            navigateTo('page-home');
+        };
+    </script>
+</body>
+</html>
